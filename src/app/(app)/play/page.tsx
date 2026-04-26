@@ -28,7 +28,9 @@ function PlayPageInner() {
 
   const [phase, setPhase]           = useState<SetupState>('config')
   const [playerColor, setColor]     = useState<PlayerColor>('white')
-  const [opponentStyle, setStyle]   = useState<OpponentStyle>('balanced')
+  // Default to blunder-friendly for beginners so kids get more learning opportunities
+  const defaultStyle: OpponentStyle = student?.skill_level === 'beginner' ? 'blunder-friendly' : 'balanced'
+  const [opponentStyle, setStyle]   = useState<OpponentStyle>(defaultStyle)
   const [aiLevel, setAiLevel]       = useState(3)
   const [, setSaving]               = useState(false)
   const [timeControl, setTimeCtrl]  = useState<number | null>(10)
@@ -127,7 +129,6 @@ function PlayPageInner() {
     handleTimeout,
   )
 
-  const opponentColor: PlayerColor = playerColor === 'white' ? 'black' : 'white'
   const opponentTime  = playerColor === 'white' ? clock.black : clock.white
   const playerTime    = playerColor === 'white' ? clock.white : clock.black
 

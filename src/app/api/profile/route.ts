@@ -12,6 +12,15 @@ const ProfileSchema = z.object({
   parent_mode:  z.boolean().default(false),
 })
 
+// Starting rating per band — keeps AI level appropriate from day one
+const STARTING_RATING: Record<string, number> = {
+  beginner:    200,   // → AI level 2 (most forgiving)
+  '400-700':   500,   // → AI level 3
+  '700-1000':  800,   // → AI level 5
+  '1000-1300': 1100,  // → AI level 7
+  '1300+':     1400,  // → AI level 9
+}
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -22,7 +31,8 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
 
   const { name, age, rating_band, skill_level, parent_mode } = parsed.data
-  const explanation_mode = explanationModeFromAge(age ?? null)
+  const explanation_mode   = explanationModeFromAge(age ?? null)
+  const estimated_rating   = STARTING_RATING[rating_band] ?? 200
 
   const { data: student, error } = await supabase
     .from('students')
@@ -32,6 +42,7 @@ export async function POST(req: NextRequest) {
         name,
         age:    age ?? null,
         rating_band,
+        estimated_rating,
         skill_level,
         explanation_mode,
         parent_mode,
