@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/Button'
 import { useChessGame } from '@/hooks/useChessGame'
 import { useGameClock } from '@/hooks/useGameClock'
 import { useProfile } from '@/hooks/useProfile'
-import { getOpponentConfig, defaultOpponentConfig } from '@/lib/chess/opponentConfig'
+import { defaultOpponentConfig } from '@/lib/chess/opponentConfig'
 import { OPPONENT_PERSONALITIES } from '@/types/chess'
 import type { OpponentStyle, PlayerColor } from '@/types/database'
 import type { SkillName } from '@/types/skills'
@@ -56,22 +56,15 @@ function PlayPageInner() {
   const focusSkill = (searchParams.get('focus') ?? null) as SkillName | null
 
   const handleStartGame = () => {
-    // aiLevel is the single source of truth — pre-set from profile, adjustable by user
-    const opponentConfig = student
-      ? getOpponentConfig(
-          {
-            ratingBand:       student.rating_band,
-            estimatedRating:  student.estimated_rating,
-            avgSkillScore:    50,
-            recentWeaknesses: [],
-          },
-          opponentStyle,
-          focusSkill,
-        )
-      : defaultOpponentConfig(aiLevel, opponentStyle)
+    // Always derive engine parameters from the user-selected aiLevel so depth,
+    // randomness and mistakeRate all match the chosen difficulty — not the profile band.
+    const opponentConfig = defaultOpponentConfig(aiLevel, opponentStyle)
 
-    // Honour the user-selected level by overriding targetStrength in the config
-    opponentConfig.targetStrength = aiLevel
+    // Preserve training-skill overlay when coming from the daily plan focus link
+    if (focusSkill && student) {
+      opponentConfig.trainingSkill              = focusSkill
+      opponentConfig.allowTrainingOpportunities = true
+    }
 
     game.startGame({ playerColor, aiLevel, opponentStyle, opponentConfig, timeControlMinutes: timeControl })
     setPhase('playing')
