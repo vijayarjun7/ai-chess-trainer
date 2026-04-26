@@ -66,6 +66,18 @@ export function ChessBoard({
   // Build square highlight styles
   const customSquareStyles: Record<string, React.CSSProperties> = {}
 
+  // Highlight king in red when in check
+  if (chess.isCheck()) {
+    const turn = chess.turn()
+    for (const row of chess.board()) {
+      for (const cell of row) {
+        if (cell?.type === 'k' && cell.color === turn) {
+          customSquareStyles[cell.square] = { backgroundColor: 'rgba(220, 38, 38, 0.65)' }
+        }
+      }
+    }
+  }
+
   if (selectedSquare) {
     customSquareStyles[selectedSquare] = { backgroundColor: 'rgba(246, 246, 105, 0.7)' }
   }
