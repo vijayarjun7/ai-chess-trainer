@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ChessBoard } from '@/components/chess/ChessBoard'
 import { MoveHistory } from '@/components/chess/MoveHistory'
@@ -20,7 +20,7 @@ const TIME_CONTROLS = [5, 10, 15, 20, 30, 45] as const
 
 type SetupState = 'config' | 'playing'
 
-export default function PlayPage() {
+function PlayPageInner() {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const { student }  = useProfile()
@@ -369,5 +369,13 @@ export default function PlayPage() {
         </>
       )}
     </div>
+  )
+}
+
+export default function PlayPage() {
+  return (
+    <Suspense>
+      <PlayPageInner />
+    </Suspense>
   )
 }
