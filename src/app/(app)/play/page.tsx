@@ -33,19 +33,18 @@ function PlayPageInner() {
   const [, setSaving]               = useState(false)
   const [timeControl, setTimeCtrl]  = useState<number | null>(10)
 
-  // Apply beginner default once student profile loads (useState can't use async data)
+  // Apply beginner default + correct difficulty once student profile loads
   useEffect(() => {
-    if (student?.skill_level === 'beginner') setStyle('blunder-friendly')
-  }, [student?.skill_level])
-
-  // Compute display level from student profile so it shows on the config screen
-  const computedLevel = student
-    ? student.estimated_rating >= 1300 ? 9
-    : student.estimated_rating >= 1000 ? 7
-    : student.estimated_rating >= 700  ? 5
-    : student.estimated_rating >= 400  ? 3
-    : 2
-    : aiLevel
+    if (!student) return
+    if (student.skill_level === 'beginner') setStyle('blunder-friendly')
+    const profileLevel =
+      student.estimated_rating >= 1300 ? 9
+      : student.estimated_rating >= 1000 ? 7
+      : student.estimated_rating >= 700  ? 5
+      : student.estimated_rating >= 400  ? 3
+      : 2
+    setAiLevel(profileLevel)
+  }, [student?.id]) // only run when a different student loads, not on every render
 
   const DIFFICULTY_LABEL: Record<number, string> = {
     1: 'Very Easy', 2: 'Very Easy', 3: 'Easy',
@@ -57,30 +56,24 @@ function PlayPageInner() {
   const focusSkill = (searchParams.get('focus') ?? null) as SkillName | null
 
   const handleStartGame = () => {
-    let level = aiLevel
-
+    // aiLevel is the single source of truth — pre-set from profile, adjustable by user
     const opponentConfig = student
-      ? (() => {
-          level = student.estimated_rating >= 1300 ? 9
-                : student.estimated_rating >= 1000 ? 7
-                : student.estimated_rating >= 700  ? 5
-                : student.estimated_rating >= 400  ? 3
-                : 2
-          return getOpponentConfig(
-            {
-              ratingBand:       student.rating_band,
-              estimatedRating:  student.estimated_rating,
-              avgSkillScore:    50,         // updated once skills are fetched
-              recentWeaknesses: [],
-            },
-            opponentStyle,
-            focusSkill,
-          )
-        })()
+      ? getOpponentConfig(
+          {
+            ratingBand:       student.rating_band,
+            estimatedRating:  student.estimated_rating,
+            avgSkillScore:    50,
+            recentWeaknesses: [],
+          },
+          opponentStyle,
+          focusSkill,
+        )
       : defaultOpponentConfig(aiLevel, opponentStyle)
 
-    setAiLevel(level)
-    game.startGame({ playerColor, aiLevel: level, opponentStyle, opponentConfig, timeControlMinutes: timeControl })
+    // Honour the user-selected level by overriding targetStrength in the config
+    opponentConfig.targetStrength = aiLevel
+
+    game.startGame({ playerColor, aiLevel, opponentStyle, opponentConfig, timeControlMinutes: timeControl })
     setPhase('playing')
   }
 
@@ -242,21 +235,33 @@ function PlayPageInner() {
             </div>
 
             {student && (
-              <div className="bg-gray-50 rounded-xl px-3 py-2.5 space-y-1.5">
+              <div className="bg-gray-50 rounded-xl px-3 py-2.5 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-gray-600">AI difficulty</span>
                   <span className="text-xs font-bold text-brand-700">
-                    Level {computedLevel} — {DIFFICULTY_LABEL[computedLevel]}
+                    Level {aiLevel} — {DIFFICULTY_LABEL[aiLevel]}
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-brand-500 h-2 rounded-full transition-all"
-                    style={{ width: `${computedLevel * 10}%` }}
-                  />
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setAiLevel(l => Math.max(1, l - 1))}
+                    disabled={aiLevel <= 1}
+                    className="w-7 h-7 rounded-lg border border-gray-200 text-gray-600 font-bold disabled:opacity-30 hover:bg-gray-100 text-sm"
+                  >−</button>
+                  <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-brand-500 h-2 rounded-full transition-all"
+                      style={{ width: `${aiLevel * 10}%` }}
+                    />
+                  </div>
+                  <button
+                    onClick={() => setAiLevel(l => Math.min(10, l + 1))}
+                    disabled={aiLevel >= 10}
+                    className="w-7 h-7 rounded-lg border border-gray-200 text-gray-600 font-bold disabled:opacity-30 hover:bg-gray-100 text-sm"
+                  >+</button>
                 </div>
                 <p className="text-[10px] text-gray-400">
-                  Auto-set from your skill profile.
+                  Auto-set from your profile — tap − / + to adjust.
                   {focusSkill && ` Focus: ${focusSkill.replace(/_/g, ' ')}.`}
                 </p>
               </div>
