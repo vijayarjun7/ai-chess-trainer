@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { font-family: 'Inter', system-ui, sans-serif; }
+  body { @apply bg-gray-50 text-gray-900 antialiased; }
+}
+
+@layer components {
+  .page-container { @apply max-w-5xl mx-auto px-3 py-4 sm:px-4 sm:py-8; }
+  .section-title  { @apply text-xl sm:text-2xl font-bold text-gray-900 mb-1; }
+  .section-sub    { @apply text-sm text-gray-500 mb-4 sm:mb-6; }
+}
