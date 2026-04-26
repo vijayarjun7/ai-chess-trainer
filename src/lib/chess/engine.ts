@@ -198,11 +198,13 @@ export async function getBestMove(
       }
     }
 
-    // Use full engine strength for evaluation; imperfection is applied
-    // in selectFromCandidates via randomness, mistakeRate, and style bias.
+    // Map targetStrength (1–10) → Stockfish Skill Level (0–20)
+    // This is the primary difficulty lever — lower skill = genuinely weaker play
+    const sfSkillLevel = Math.min(20, Math.max(0, Math.round((config.targetStrength - 1) * 20 / 9)))
+
     sf.postMessage('ucinewgame')
     sf.postMessage(`setoption name MultiPV value ${poolSize}`)
-    sf.postMessage('setoption name Skill Level value 20')
+    sf.postMessage(`setoption name Skill Level value ${sfSkillLevel}`)
     sf.postMessage(`position fen ${fen}`)
     sf.postMessage(`go depth ${depth} movetime ${budgetMs}`)
   })

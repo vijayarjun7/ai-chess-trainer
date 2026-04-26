@@ -28,12 +28,30 @@ function PlayPageInner() {
 
   const [phase, setPhase]           = useState<SetupState>('config')
   const [playerColor, setColor]     = useState<PlayerColor>('white')
-  // Default to blunder-friendly for beginners so kids get more learning opportunities
-  const defaultStyle: OpponentStyle = student?.skill_level === 'beginner' ? 'blunder-friendly' : 'balanced'
-  const [opponentStyle, setStyle]   = useState<OpponentStyle>(defaultStyle)
+  const [opponentStyle, setStyle]   = useState<OpponentStyle>('balanced')
   const [aiLevel, setAiLevel]       = useState(3)
   const [, setSaving]               = useState(false)
   const [timeControl, setTimeCtrl]  = useState<number | null>(10)
+
+  // Apply beginner default once student profile loads (useState can't use async data)
+  useEffect(() => {
+    if (student?.skill_level === 'beginner') setStyle('blunder-friendly')
+  }, [student?.skill_level])
+
+  // Compute display level from student profile so it shows on the config screen
+  const computedLevel = student
+    ? student.estimated_rating >= 1300 ? 9
+    : student.estimated_rating >= 1000 ? 7
+    : student.estimated_rating >= 700  ? 5
+    : student.estimated_rating >= 400  ? 3
+    : 2
+    : aiLevel
+
+  const DIFFICULTY_LABEL: Record<number, string> = {
+    1: 'Very Easy', 2: 'Very Easy', 3: 'Easy',
+    4: 'Easy',      5: 'Medium',    6: 'Medium',
+    7: 'Hard',      8: 'Hard',      9: 'Very Hard', 10: 'Very Hard',
+  }
 
   // Honour ?focus=<skill> link from DailyPlanCard
   const focusSkill = (searchParams.get('focus') ?? null) as SkillName | null
@@ -224,10 +242,24 @@ function PlayPageInner() {
             </div>
 
             {student && (
-              <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
-                AI difficulty is auto-set from your skill profile.
-                {focusSkill && ` Training focus: ${focusSkill.replace(/_/g, ' ')}.`}
-              </p>
+              <div className="bg-gray-50 rounded-xl px-3 py-2.5 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-gray-600">AI difficulty</span>
+                  <span className="text-xs font-bold text-brand-700">
+                    Level {computedLevel} — {DIFFICULTY_LABEL[computedLevel]}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-brand-500 h-2 rounded-full transition-all"
+                    style={{ width: `${computedLevel * 10}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-gray-400">
+                  Auto-set from your skill profile.
+                  {focusSkill && ` Focus: ${focusSkill.replace(/_/g, ' ')}.`}
+                </p>
+              </div>
             )}
 
             <Button className="w-full" size="lg" onClick={handleStartGame}>
