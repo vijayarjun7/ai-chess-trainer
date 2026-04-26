@@ -4,12 +4,13 @@ import { redirect } from 'next/navigation'
 import { isDemoMode } from '@/lib/demo/data'
 
 const NAV = [
-  { href: '/dashboard', label: 'Home',     icon: '🏠' },
-  { href: '/play',      label: 'Play',     icon: '♟️' },
-  { href: '/puzzles',   label: 'Puzzles',  icon: '🧩' },
-  { href: '/lessons',   label: 'Lessons',  icon: '📖' },
-  { href: '/progress',  label: 'Progress', icon: '📊' },
-  { href: '/coach',     label: 'Coach',    icon: '💬' },
+  { href: '/dashboard',         label: 'Home',       icon: '🏠' },
+  { href: '/play',              label: 'Play',       icon: '♟️' },
+  { href: '/puzzles',           label: 'Puzzles',    icon: '🧩' },
+  { href: '/lessons',           label: 'Lessons',    icon: '📖' },
+  { href: '/progress',          label: 'Progress',   icon: '📊' },
+  { href: '/coach',             label: 'Coach',      icon: '💬' },
+  { href: '/tournament-review', label: 'Tournament', icon: '🏆' },
 ]
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -53,7 +54,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       {/* Bottom nav (mobile) */}
       <nav className="sm:hidden bg-white border-t border-gray-100 fixed bottom-0 left-0 right-0 safe-area-bottom">
-        <div className="grid grid-cols-6 h-16">
+        <div className="grid grid-cols-7 h-16">
           {NAV.map(n => (
             <Link
               key={n.href}
