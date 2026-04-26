@@ -6,6 +6,13 @@ export async function updateSession(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const isDemoMode  = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
   if (!supabaseUrl || supabaseUrl === 'your_supabase_project_url' || isDemoMode) {
+    // In demo mode redirect auth/onboarding pages straight to dashboard
+    const path = request.nextUrl.pathname
+    if (isDemoMode && (path.startsWith('/login') || path.startsWith('/signup') || path.startsWith('/onboarding'))) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard'
+      return NextResponse.redirect(url)
+    }
     return NextResponse.next({ request })
   }
 

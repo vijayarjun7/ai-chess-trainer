@@ -17,6 +17,12 @@ export default function OnboardingPage() {
   const [error, setError]       = useState<string | null>(null)
 
   const handleSubmit = async () => {
+    // In demo mode skip the API call — profile is pre-loaded from mock data
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+      router.push('/dashboard')
+      return
+    }
+
     setLoading(true)
     setError(null)
 
